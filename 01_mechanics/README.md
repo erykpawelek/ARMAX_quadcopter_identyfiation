@@ -97,3 +97,7 @@ Ixy: 0.000000
 Ixz: 0.000000
 
 Iyz: 0.000000
+
+## Drone layout
+
+![Skibidi](Drone_base_dims.png)
