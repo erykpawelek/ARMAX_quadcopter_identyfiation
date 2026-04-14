@@ -3,9 +3,9 @@
     <world name="drone_world">
 
         <physics name="1ms" type="ignored">
-            <max_step_size>0.0002</max_step_size>
+            <max_step_size>0.0001</max_step_size>
             <real_time_factor>1.0</real_time_factor>
-            <real_time_update_rate>5000</real_time_update_rate>
+            <real_time_update_rate>10000</real_time_update_rate>
         </physics>
     
         <!-- Physics and basic simulation plugins required by Gazebo Harmonic -->
