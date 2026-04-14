@@ -6,7 +6,7 @@
 
 Main frame weight without payload and without dropper pin and propellers.
 
-**Mass**: 1.310
+**Mass**: 1.310 + 0.1 (from cables and additional equipment excluded from CAD)
 
 Center of mass coordinates from reference global frame (converted to meters).
 
@@ -22,17 +22,17 @@ Inertia tensor relative to mass center (converted to kg\*m^2).
 
 **Moments of inertia**:
 
-Ixx: 0.002289119
+Ixx: 0.0034
 
-Iyy: 0.002840295
+Iyy: 0.0043
 
-Izz: 0.003642920
+Izz: 0.0055
 
-Ixy: -0.000036994
+Ixy: -0.000036994 ~ 0
 
-Ixz: -0.000103084
+Ixz: -0.000103084 ~ 0
 
-Iyz: -0.000046559
+Iyz: -0.000046559 ~ 0
 
 # 2. Propeller
 
@@ -101,7 +101,6 @@ Iyz: 0.000000
 ## Drone layout
 
 ![Skibidi](Drone_base_dims.png)
-
 
 <geometry>
           <mesh>

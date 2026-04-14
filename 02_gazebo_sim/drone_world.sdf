@@ -2,6 +2,7 @@
 <sdf version="1.9">
     <world name="drone_world">
 
+        <!-- Definition of sampling time of the simulation-->
         <physics name="1ms" type="ignored">
             <max_step_size>0.0001</max_step_size>
             <real_time_factor>1.0</real_time_factor>
@@ -35,6 +36,7 @@
             </attenuation>
             <direction>-0.5 0.1 -0.9</direction>
         </light>
+
         <!-- Infinite ground plane for collision and visual reference -->
         <model name="ground_plane">
             <static>true</static>
@@ -50,8 +52,8 @@
                 <visual name="visual">
                     <geometry>
                         <plane>
-                        <normal>0 0 1</normal>
-                        <size>100 100</size>
+                            <normal>0 0 1</normal>
+                            <size>100 100</size>
                         </plane>
                     </geometry>
                     <material>
@@ -63,7 +65,7 @@
             </link>
         </model>
 
-    <!-- 4 Cylinders serving as the launchpad for payload clearance -->
+    <!-- 4 Cylinders serving as the launchpad for drone clearance -->
         <model name="launchpad">
             <static>true</static>
             <pose>0 0 0 0 0 0</pose>
@@ -131,8 +133,8 @@
                     <pose>-0.088388 -0.088388 0.15 0 0 0</pose>
                     <geometry>
                         <cylinder>
-                        <radius>0.02</radius>
-                        <length>0.3</length>
+                            <radius>0.02</radius>
+                            <length>0.3</length>
                         </cylinder>
                     </geometry>
                     <material>
@@ -146,8 +148,8 @@
                     <pose>-0.088388 0.088388 0.15 0 0 0</pose>
                     <geometry>
                         <cylinder>
-                        <radius>0.02</radius>
-                        <length>0.3</length>
+                            <radius>0.02</radius>
+                            <length>0.3</length>
                         </cylinder>
                     </geometry>
                 </collision>
@@ -155,8 +157,8 @@
                     <pose>-0.088388 0.088388 0.15 0 0 0</pose>
                     <geometry>
                         <cylinder>
-                        <radius>0.02</radius>
-                        <length>0.3</length>
+                            <radius>0.02</radius>
+                            <length>0.3</length>
                         </cylinder>
                     </geometry>
                     <material>
@@ -168,9 +170,7 @@
         </model>
 
         <include>
-            <!-- Change this path to match the actual name/location of your drone's SDF file -->
             <uri>file://dropper_drone.sdf</uri> 
-            <!-- Spawn the drone at Z = 0.302 meters to sit on the launchpad -->
             <pose>0 0 0.301 0 0 0</pose>
         </include>
 

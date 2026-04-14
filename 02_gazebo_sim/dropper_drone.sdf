@@ -1,18 +1,18 @@
 <?xml version="1.0" ?>
 <sdf version="1.9">
-  <model name="dropper_drone">
-    
-    <pose>0 0 0 0 0 0</pose>
 
+  <model name="dropper_drone">
+    <pose>0 0 0 0 0 0</pose>
     <link name="base_link">
+
       <sensor name="imu_sensor" type="imu">
         <always_on>1</always_on>
         <update_rate>1000</update_rate>
       </sensor>
 
       <inertial>
-        <mass>1.310</mass>
-        <pose>0.0 0.0 0.03000 0 0 0</pose>
+        <mass>1.410</mass>
+        <pose>-0.002060 -0.001083 0.034620 0 0 0</pose>
         <inertia>
           <ixx>0.0034</ixx>
           <iyy>0.0043</iyy>
@@ -30,10 +30,12 @@
         </geometry>
       </visual>
       
-      <collision name="base_link_collision">
+      <collision name="bottom_plate_collision">
         <pose>0.0 0.0 0.01 0 0 0</pose>
         <geometry>
-          <box><size>0.197 0.192 0.02</size></box>
+          <box>
+            <size>0.185 0.185 0.02</size>
+          </box>
         </geometry>
         <surface>
           <contact>
@@ -44,12 +46,149 @@
           </contact>
           <friction>
             <ode>
-              <mu>1.0</mu>
-              <mu2>1.0</mu2>
+              <mu>100.0</mu>
+              <mu2>100.0</mu2>
             </ode>
           </friction>
         </surface>
       </collision>
+      <collision name="electronics_compartment_collision">
+        <pose>0 0 0.017 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.12 0.055 0.024</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>100.0</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>100.0</mu>
+              <mu2>100.0</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="battery_collision">
+        <pose>0 0 0.048 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.078 0.038 0.038</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>100.0</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>100.0</mu>
+              <mu2>100.0</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="motor0_collision">
+        <pose>0.088388 -0.088388 0.0137065 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.027</radius>
+            <length>0.017</length>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>100.0</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>100.0</mu>
+              <mu2>100.0</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="motor1_collision">
+        <pose>-0.088388 0.088388 0.0137065 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.027</radius>
+            <length>0.017</length>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>100.0</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>100.0</mu>
+              <mu2>100.0</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="motor2_collision">
+        <pose>0.088388 0.088388 0.0137065 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.027</radius>
+            <length>0.017</length>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>100.0</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>100.0</mu>
+              <mu2>100.0</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="motor3_collision">
+        <pose>-0.088388 -0.088388 0.0137065 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.027</radius>
+            <length>0.017</length>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>100.0</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>100.0</mu>
+              <mu2>100.0</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+
     </link>
 
     <link name="rotor_0">
@@ -141,7 +280,7 @@
 <plugin filename="gz-sim-lift-drag-system" name="gz::sim::systems::LiftDrag">
       <a0>0.35</a0>
       <alpha_stall>1.5</alpha_stall>
-      <cla>4.750</cla>
+      <cla>1.03</cla>
       <cda>0.025</cda>
       <cma>0.0</cma>
       <cla_stall>-0.1</cla_stall>
@@ -190,7 +329,7 @@
     <plugin filename="gz-sim-lift-drag-system" name="gz::sim::systems::LiftDrag">
       <a0>0.35</a0>
       <alpha_stall>1.5</alpha_stall>
-      <cla>4.750</cla>
+      <cla>1.03</cla>
       <cda>0.025</cda>
       <cma>0.0</cma>
       <cla_stall>-0.1</cla_stall>
