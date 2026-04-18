@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
 <sdf version="1.9">
 
+  <!-- Main frame of the model-->
   <model name="dropper_drone">
     <pose>0 0 0 0 0 0</pose>
     <link name="base_link">
@@ -274,10 +275,53 @@
         <dynamics><damping>0.0002</damping><friction>0.0002</friction></dynamics>
       </axis>
     </joint>
+
+    <model name="payload_model">
+      <link name="payload_link">
+        <pose>0 0 -0.06 0 0 0</pose>
+        <inertial>
+          <mass>0.5</mass>
+          <pose>0 0 0 0 0 0</pose>
+          <inertia>
+            <ixx>0.000208</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.000208</iyy>
+            <iyz>0</iyz>
+            <izz>0.000208</izz>
+          </inertia>
+        </inertial>
+        <visual name="payload_visual">
+          <geometry>
+            <box>
+              <size>0.05 0.05 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1.00 0.35 0.00 1.0</ambient>
+            <diffuse>1.00 0.35 0.00 1.0</diffuse>
+          </material>
+        </visual>
+        <collision name="payload_collision">
+          <geometry>
+            <box>
+              <size>0.05 0.05 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <plugin filename="gz-sim-detachable-joint-system" name="gz::sim::systems::DetachableJoint">
+      <parent_link>base_link</parent_link>
+      <child_model>payload_model</child_model>
+      <child_link>payload_link</child_link>
+      <detach_topic>/payload/detach</detach_topic>
+    </plugin>
     
     <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher"></plugin>
 
-<plugin filename="gz-sim-lift-drag-system" name="gz::sim::systems::LiftDrag">
+    <plugin filename="gz-sim-lift-drag-system" name="gz::sim::systems::LiftDrag">
       <a0>0.35</a0>
       <alpha_stall>1.5</alpha_stall>
       <cla>1.03</cla>

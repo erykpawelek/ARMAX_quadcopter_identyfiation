@@ -1,9 +1,9 @@
 # Telemetry and Blackbox logs (CRITICAL)
-# Logi czarnej skrzynki i telemetrii (KRYTYCZNE)
 *.BIN
 *.tlog
 *.tlog.raw
-*.DAT
+*.DAT4
+*.out
 logs/
 mav.log
 
@@ -27,6 +27,7 @@ __pycache__/
 .venv/
 venv/
 env/
+armax_env/
 
 # IDE and System files
 .vscode/
