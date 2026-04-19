@@ -4,6 +4,7 @@
 *.tlog.raw
 *.DAT4
 *.out
+*.mat
 logs/
 mav.log
 
