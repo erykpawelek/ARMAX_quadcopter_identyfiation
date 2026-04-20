@@ -1,146 +1,345 @@
 clc 
 clear all 
 
-load('accel_filter_set_160.mat')
-markers.time(4) = markers.time(4) + 0.94;
+%% Vibration analysis during hover 
+vib_hover_filt_20 = load('vib_hover_filt_20.mat');
+vib_hover_filt_20.markers.time(3) = vib_hover_filt_20.markers.time(3) + 0.94;
+vib_hover_filt_160 = load('vib_hover_filt_160.mat');
+vib_hover_filt_160.markers.time(3) = vib_hover_filt_160.markers.time(3) + 0.94;
 
-%% Accelerations plots
-figure;
+figure("Name",'Time plots of Accelerations during hovering with payload dropp (LPF cutoff 20Hz');
 subplot(2,1,1);
-plot(imu.time, imu.accX, '-r', imu.time, imu.accY, '--b'); xlim([50 120])
-xlabel('Time [s]');ylabel('Acceleration [m/s^2]')
+plot(vib_hover_filt_20.imu.time, vib_hover_filt_20.imu.accX, '-r', vib_hover_filt_20.imu.time, vib_hover_filt_20.imu.accY, '--b'); 
+xlim([40 130])
+xlabel('Time [s]');
+ylabel('Acceleration [m/s^2]')
 grid on;
-for i = 1:length(markers.time)
-    m_time = markers.time(i);
-    m_text = string(markers.text(i,:)); 
+% Loop to plot vertical lines for markers
+for i = 1:length(vib_hover_filt_20.markers.time)
+    m_time = vib_hover_filt_20.markers.time(i);
+    m_text = string(vib_hover_filt_20.markers.text(i,:)); 
     xline(m_time, '--m');   
 end
 legend('Acceleration X', 'Acceleration Y');
 subplot(2,1,2);
-plot(imu.time, imu.accZ, '-g'); xlim([50 120])
-xlabel('Time [s]');ylabel('Acceleration [m/s^2]')
+plot(vib_hover_filt_20.imu.time, vib_hover_filt_20.imu.accZ, '-g'); 
+xlim([40 130])
+xlabel('Time [s]');
+ylabel('Acceleration [m/s^2]')
 grid on;
-for i = 1:length(markers.time)
-    m_time = markers.time(i);
-    m_text = string(markers.text(i,:)); 
+
+for i = 1:length(vib_hover_filt_20.markers.time)
+    m_time = vib_hover_filt_20.markers.time(i);
+    m_text = string(vib_hover_filt_20.markers.text(i,:)); 
     xline(m_time, '--m');   
 end
 legend('Acceleration Z');
-sgtitle('Accelaration plots during whole identyfication sequence');
+sgtitle('Time plots of Accelerations during hovering with payload dropp (LPF cutoff 20Hz');
 
-%% Vibrations analisys
-
-%Extracting data periods
-marker_str = string(markers.text);
-idx_noise1_start = find(contains(marker_str, 'NOISE_1_START'));
-idx_noise1_end   = find(contains(marker_str, 'NOISE_1_STOP'));
-idx_noise2_start = find(contains(marker_str, 'NOISE_2_START'));
-idx_noise2_end   = find(contains(marker_str, 'NOISE_2_STOP'));
-
-t_noise1_start = markers.time(idx_noise1_start);
-t_noise1_end   = markers.time(idx_noise1_end);
-t_noise2_start = markers.time(idx_noise2_start);
-t_noise2_end   = markers.time(idx_noise2_end);
-
-mask_noise1 = (imu.time >= t_noise1_start) & (imu.time <= t_noise1_end);
-mask_noise2 = (imu.time >= t_noise2_start) & (imu.time <= t_noise2_end);
-
-time_noise1_segment = imu.time(mask_noise1);
-time_noise2_segment = imu.time(mask_noise2);
-accX_noise1_segment = imu.accX(mask_noise1);
-accX_noise2_segment = imu.accX(mask_noise2);
-accY_noise1_segment = imu.accY(mask_noise1);
-accY_noise2_segment = imu.accY(mask_noise2);
-
-figure;
+figure("Name",'Time plots of Accelerations during hovering with payload dropp (LPF cutoff 160Hz');
 subplot(2,1,1);
-
-plot(time_noise1_segment, accX_noise1_segment, '-r');
-xlabel('Time [s]');ylabel('Acceleration [m/s^2]')
-legend('Acceleration X')
+plot(vib_hover_filt_160.imu.time, vib_hover_filt_160.imu.accX, '-r', vib_hover_filt_160.imu.time, vib_hover_filt_160.imu.accY, '--b'); 
+xlim([40 130])
+xlabel('Time [s]');
+ylabel('Acceleration [m/s^2]')
 grid on;
+% Loop to plot vertical lines for markers
+for i = 1:length(vib_hover_filt_160.markers.time)
+    m_time = vib_hover_filt_160.markers.time(i);
+    m_text = string(vib_hover_filt_160.markers.text(i,:)); 
+    xline(m_time, '--m');   
+end
+legend('Acceleration X', 'Acceleration Y');
 subplot(2,1,2);
-plot(time_noise1_segment, accY_noise1_segment, '-b');
-xlabel('Time [s]');ylabel('Acceleration [m/s^2]')
-legend('Acceleration Y')
+plot(vib_hover_filt_160.imu.time, vib_hover_filt_160.imu.accZ, '-g'); 
+xlim([40 130])
+xlabel('Time [s]');
+ylabel('Acceleration [m/s^2]')
 grid on;
-sgtitle('Extracted segment of accelerations during noise excitation with payload attached (Low pass filter cutoff freqiency set to 160Hz)');
 
-figure;
+for i = 1:length(vib_hover_filt_160.markers.time)
+    m_time = vib_hover_filt_160.markers.time(i);
+    m_text = string(vib_hover_filt_160.markers.text(i,:)); 
+    xline(m_time, '--m');   
+end
+legend('Acceleration Z');
+sgtitle('Time plots of Accelerations during hovering with payload dropp (LPF cutoff 160Hz');
+
+%% FFT Analysis for Hover (LPF 20Hz)
+
+% Extracting marker strings for 20Hz data
+marker_str_20 = string(vib_hover_filt_20.markers.text);
+
+% Finding indices of specific markers
+idx_hp_start_20 = find(contains(marker_str_20, 'HOVER_PAYLOAD_START'));
+idx_hp_end_20   = find(contains(marker_str_20, 'HOVER_PAYLOAD_STOP'));
+idx_hnp_start_20 = find(contains(marker_str_20, 'HOVER_NO_PAYLOAD_START'));
+idx_hnp_end_20   = find(contains(marker_str_20, 'HOVER_NO_PAYLOAD_STOP'));
+
+% Extracting exact time values for markers
+t_hp_start_20 = vib_hover_filt_20.markers.time(idx_hp_start_20);
+t_hp_end_20   = vib_hover_filt_20.markers.time(idx_hp_end_20);
+t_hnp_start_20 = vib_hover_filt_20.markers.time(idx_hnp_start_20);
+t_hnp_end_20   = vib_hover_filt_20.markers.time(idx_hnp_end_20);
+
+% Creating logical masks for time segments
+mask_hp_20 = (vib_hover_filt_20.imu.time >= t_hp_start_20) & (vib_hover_filt_20.imu.time <= t_hp_end_20);
+mask_hnp_20 = (vib_hover_filt_20.imu.time >= t_hnp_start_20) & (vib_hover_filt_20.imu.time <= t_hnp_end_20);
+
+% Extracting time and acceleration segments
+time_hp_20 = vib_hover_filt_20.imu.time(mask_hp_20);
+accX_hp_20 = vib_hover_filt_20.imu.accX(mask_hp_20);
+accY_hp_20 = vib_hover_filt_20.imu.accY(mask_hp_20);
+
+time_hnp_20 = vib_hover_filt_20.imu.time(mask_hnp_20);
+accX_hnp_20 = vib_hover_filt_20.imu.accX(mask_hnp_20);
+accY_hnp_20 = vib_hover_filt_20.imu.accY(mask_hnp_20);
+
+% Calculating real sampling frequency
+Fs_hp_20 = length(accX_hp_20) / (time_hp_20(end) - time_hp_20(1));
+Fs_hnp_20 = length(accX_hnp_20) / (time_hnp_20(end) - time_hnp_20(1));
+
+% Detrending data
+accX_hp_20_detrend = accX_hp_20 - mean(accX_hp_20);
+accY_hp_20_detrend = accY_hp_20 - mean(accY_hp_20);
+accX_hnp_20_detrend = accX_hnp_20 - mean(accX_hnp_20);
+accY_hnp_20_detrend = accY_hnp_20 - mean(accY_hnp_20);
+
+% Length of signals
+L_hp_20 = length(accX_hp_20_detrend);
+L_hnp_20 = length(accX_hnp_20_detrend);
+
+% FFT for X Axis (20Hz)
+Y_x_hp_20 = fft(accX_hp_20_detrend);
+P2_x_hp_20 = abs(Y_x_hp_20 / L_hp_20); 
+P1_x_hp_20 = P2_x_hp_20(1:floor(L_hp_20/2)+1);
+P1_x_hp_20(2:end-1) = 2 * P1_x_hp_20(2:end-1);
+
+Y_x_hnp_20 = fft(accX_hnp_20_detrend);
+P2_x_hnp_20 = abs(Y_x_hnp_20 / L_hnp_20);
+P1_x_hnp_20 = P2_x_hnp_20(1:floor(L_hnp_20/2)+1);
+P1_x_hnp_20(2:end-1) = 2 * P1_x_hnp_20(2:end-1);
+
+% FFT for Y Axis (20Hz)
+Y_y_hp_20 = fft(accY_hp_20_detrend);
+P2_y_hp_20 = abs(Y_y_hp_20 / L_hp_20); 
+P1_y_hp_20 = P2_y_hp_20(1:floor(L_hp_20/2)+1);
+P1_y_hp_20(2:end-1) = 2 * P1_y_hp_20(2:end-1);
+
+Y_y_hnp_20 = fft(accY_hnp_20_detrend);
+P2_y_hnp_20 = abs(Y_y_hnp_20 / L_hnp_20);
+P1_y_hnp_20 = P2_y_hnp_20(1:floor(L_hnp_20/2)+1);
+P1_y_hnp_20(2:end-1) = 2 * P1_y_hnp_20(2:end-1);
+
+% Frequency vectors
+f_hp_20 = Fs_hp_20 * (0:(floor(L_hp_20/2))) / L_hp_20;
+f_hnp_20 = Fs_hnp_20 * (0:(floor(L_hnp_20/2))) / L_hnp_20;
+
+% Plotting FFT 20Hz - X Axis
+figure('Name','FFT 20Hz - X Axis during hover'); 
 subplot(2,1,1);
-plot(time_noise2_segment, accX_noise2_segment, '-r');
-xlabel('Time [s]');ylabel('Acceleration [m/s^2]')
-legend('Acceleration X')
-grid on;
+plot(f_hp_20, P1_x_hp_20, '-r'); grid on; xlim([0 400]);
+legend('Hover Payload Attached');
 subplot(2,1,2);
-plot(time_noise2_segment, accY_noise2_segment, '-b');
-xlabel('Time [s]');ylabel('Acceleration [m/s^2]')
-legend('Acceleration Y')
-grid on;
-sgtitle('Extracted segment of accelerations during noise excitation with payload detached (Low pass filter cutoff freqiency set to 160Hz)');
-
-Fs1_real = length(accX_noise1_segment) / (time_noise1_segment(end) - time_noise1_segment(1));
-Fs2_real = length(accX_noise2_segment) / (time_noise2_segment(end) - time_noise2_segment(1));
-
-% Displaing real sampling freq
-disp(['Real Fs for Noise 1: ', num2str(Fs1_real), ' Hz']);
-disp(['Real Fs for Noise 2: ', num2str(Fs2_real), ' Hz']);
-
-% Data detrening
-accX_n1_detrend = accX_noise1_segment - mean(accX_noise1_segment);
-accX_n2_detrend = accX_noise2_segment - mean(accX_noise2_segment);
-accY_n1_detrend = accY_noise1_segment - mean(accY_noise1_segment);
-accY_n2_detrend = accY_noise2_segment - mean(accY_noise2_segment);
-
-% Number of samples
-L1 = length(accX_n1_detrend);
-L2 = length(accX_n2_detrend);
-
-% FFT X
-Y1_x = fft(accX_n1_detrend);
-P2_1_x = abs(Y1_x / L1); 
-P1_1_x = P2_1_x(1:floor(L1/2)+1);
-P1_1_x(2:end-1) = 2 * P1_1_x(2:end-1);
-
-Y2_x = fft(accX_n2_detrend);
-P2_2_x = abs(Y2_x / L2);
-P1_2_x = P2_2_x(1:floor(L2/2)+1);
-P1_2_x(2:end-1) = 2 * P1_2_x(2:end-1);
-
-% FFT Y
-Y1_y = fft(accY_n1_detrend);
-P2_1_y = abs(Y1_y / L1); 
-P1_1_y = P2_1_y(1:floor(L1/2)+1);
-P1_1_y(2:end-1) = 2 * P1_1_y(2:end-1);
-
-Y2_y = fft(accY_n2_detrend);
-P2_2_y = abs(Y2_y / L2);
-P1_2_y = P2_2_y(1:floor(L2/2)+1);
-P1_2_y(2:end-1) = 2 * P1_2_y(2:end-1);
-
-% Frequency axis
-f1 = Fs1_real * (0:(floor(L1/2))) / L1;
-f2 = Fs2_real * (0:(floor(L2/2))) / L2;
-
-figure; 
-subplot(2,1,1);
-plot(f1, P1_1_x, '-r'); grid on; xlim([0 400]);
-legend('Payload Attached')
-subplot(2,1,2);
-plot(f2, P1_2_x, '-r'); grid on; xlim([0 400]);
-legend('Payload Detached')
-
- 
-sgtitle('Normalized Single-Sided Amplitude Spectrum - X Axis Vibrations (Low pass filter cutoff freqiency set to 160Hz)');
+plot(f_hnp_20, P1_x_hnp_20, '-r'); grid on; xlim([0 400]);
+legend('Hover Payload Detached');
+sgtitle('Amplitude Spectrum - X Axis Vibrations (Hover, LPF 20Hz)');
 xlabel('Frequency [Hz]'); ylabel('Normalised amplitude');
 
-figure;
+% Plotting FFT 20Hz - Y Axis
+figure('Name','FFT 20Hz - Y Axis during hover'); 
 subplot(2,1,1);
-plot(f1, P1_1_y, '-r'); grid on; xlim([0 400]);
-legend('Payload Attached')
+plot(f_hp_20, P1_y_hp_20, '-r'); grid on; xlim([0 400]);
+legend('Hover Payload Attached');
 subplot(2,1,2);
-plot(f2, P1_2_y, '-r'); grid on; xlim([0 400]);
-legend('Payload Detached')
+plot(f_hnp_20, P1_y_hnp_20, '-r'); grid on; xlim([0 400]);
+legend('Hover Payload Detached');
+sgtitle('Amplitude Spectrum - Y Axis Vibrations (Hover, LPF 20Hz)');
+xlabel('Frequency [Hz]'); ylabel('Normalised amplitude');
 
-sgtitle('Normalized Single-Sided Amplitude Spectrum - Y Axis Vibrations (Low pass filter cutoff freqiency set to 160Hz)');
+%% FFT Analysis for Hover (LPF 160Hz)
+
+% Extracting marker strings for 160Hz data
+marker_str_160 = string(vib_hover_filt_160.markers.text);
+
+% Finding indices of specific markers
+idx_hp_start_160 = find(contains(marker_str_160, 'HOVER_PAYLOAD_START'));
+idx_hp_end_160   = find(contains(marker_str_160, 'HOVER_PAYLOAD_STOP'));
+idx_hnp_start_160 = find(contains(marker_str_160, 'HOVER_NO_PAYLOAD_START'));
+idx_hnp_end_160   = find(contains(marker_str_160, 'HOVER_NO_PAYLOAD_STOP'));
+
+% Extracting exact time values for markers
+t_hp_start_160 = vib_hover_filt_160.markers.time(idx_hp_start_160);
+t_hp_end_160   = vib_hover_filt_160.markers.time(idx_hp_end_160);
+t_hnp_start_160 = vib_hover_filt_160.markers.time(idx_hnp_start_160);
+t_hnp_end_160   = vib_hover_filt_160.markers.time(idx_hnp_end_160);
+
+% Creating logical masks for time segments
+mask_hp_160 = (vib_hover_filt_160.imu.time >= t_hp_start_160) & (vib_hover_filt_160.imu.time <= t_hp_end_160);
+mask_hnp_160 = (vib_hover_filt_160.imu.time >= t_hnp_start_160) & (vib_hover_filt_160.imu.time <= t_hnp_end_160);
+
+% Extracting time and acceleration segments
+time_hp_160 = vib_hover_filt_160.imu.time(mask_hp_160);
+accX_hp_160 = vib_hover_filt_160.imu.accX(mask_hp_160);
+accY_hp_160 = vib_hover_filt_160.imu.accY(mask_hp_160);
+
+time_hnp_160 = vib_hover_filt_160.imu.time(mask_hnp_160);
+accX_hnp_160 = vib_hover_filt_160.imu.accX(mask_hnp_160);
+accY_hnp_160 = vib_hover_filt_160.imu.accY(mask_hnp_160);
+
+% Calculating real sampling frequency
+Fs_hp_160 = length(accX_hp_160) / (time_hp_160(end) - time_hp_160(1));
+Fs_hnp_160 = length(accX_hnp_160) / (time_hnp_160(end) - time_hnp_160(1));
+
+% Detrending data (removing mean/DC offset)
+accX_hp_160_detrend = accX_hp_160 - mean(accX_hp_160);
+accY_hp_160_detrend = accY_hp_160 - mean(accY_hp_160);
+accX_hnp_160_detrend = accX_hnp_160 - mean(accX_hnp_160);
+accY_hnp_160_detrend = accY_hnp_160 - mean(accY_hnp_160);
+
+% Length of signals
+L_hp_160 = length(accX_hp_160_detrend);
+L_hnp_160 = length(accX_hnp_160_detrend);
+
+% FFT for X Axis (160Hz)
+Y_x_hp_160 = fft(accX_hp_160_detrend);
+P2_x_hp_160 = abs(Y_x_hp_160 / L_hp_160); 
+P1_x_hp_160 = P2_x_hp_160(1:floor(L_hp_160/2)+1);
+P1_x_hp_160(2:end-1) = 2 * P1_x_hp_160(2:end-1);
+
+Y_x_hnp_160 = fft(accX_hnp_160_detrend);
+P2_x_hnp_160 = abs(Y_x_hnp_160 / L_hnp_160);
+P1_x_hnp_160 = P2_x_hnp_160(1:floor(L_hnp_160/2)+1);
+P1_x_hnp_160(2:end-1) = 2 * P1_x_hnp_160(2:end-1);
+
+% FFT for Y Axis (160Hz)
+Y_y_hp_160 = fft(accY_hp_160_detrend);
+P2_y_hp_160 = abs(Y_y_hp_160 / L_hp_160); 
+P1_y_hp_160 = P2_y_hp_160(1:floor(L_hp_160/2)+1);
+P1_y_hp_160(2:end-1) = 2 * P1_y_hp_160(2:end-1);
+
+Y_y_hnp_160 = fft(accY_hnp_160_detrend);
+P2_y_hnp_160 = abs(Y_y_hnp_160 / L_hnp_160);
+P1_y_hnp_160 = P2_y_hnp_160(1:floor(L_hnp_160/2)+1);
+P1_y_hnp_160(2:end-1) = 2 * P1_y_hnp_160(2:end-1);
+
+% Frequency vectors
+f_hp_160 = Fs_hp_160 * (0:(floor(L_hp_160/2))) / L_hp_160;
+f_hnp_160 = Fs_hnp_160 * (0:(floor(L_hnp_160/2))) / L_hnp_160;
+
+% Plotting FFT 160Hz - X Axis
+figure('Name','FFT 160Hz - X Axis during hover'); 
+subplot(2,1,1);
+plot(f_hp_160, P1_x_hp_160, '-r'); grid on; xlim([0 400]);
+legend('Hover Payload Attached');
+subplot(2,1,2);
+plot(f_hnp_160, P1_x_hnp_160, '-r'); grid on; xlim([0 400]);
+legend('Hover Payload Detached');
+sgtitle('Amplitude Spectrum - X Axis Vibrations (Hover, LPF 160Hz)');
+xlabel('Frequency [Hz]'); ylabel('Normalised amplitude');
+
+% Plotting FFT 160Hz - Y Axis
+figure('Name','FFT 160Hz - Y Axis during hover'); 
+subplot(2,1,1);
+plot(f_hp_160, P1_y_hp_160, '-r'); grid on; xlim([0 400]);
+legend('Hover Payload Attached');
+subplot(2,1,2);
+plot(f_hnp_160, P1_y_hnp_160, '-r'); grid on; xlim([0 400]);
+legend('Hover Payload Detached');
+sgtitle('Amplitude Spectrum - Y Axis Vibrations (Hover, LPF 160Hz)');
+xlabel('Frequency [Hz]'); ylabel('Normalised amplitude');
+
+%% FFT Analysis for Hover (Linspace Time Vector Correction - LPF 20Hz & 160Hz)
+
+% SECTION 1: Corrected Time Vector and FFT for 20Hz
+
+% Create a perfectly uniform time vector using linspace (No data loss)
+t_uni_hp_20 = linspace(time_hp_20(1), time_hp_20(end), length(accX_hp_20));
+t_uni_hnp_20 = linspace(time_hnp_20(1), time_hnp_20(end), length(accX_hnp_20));
+
+% 2. Calculate the exact average sampling frequency based on the new uniform vector
+Fs_ideal_hp_20 = 1 / (t_uni_hp_20(2) - t_uni_hp_20(1));
+Fs_ideal_hnp_20 = 1 / (t_uni_hnp_20(2) - t_uni_hnp_20(1));
+
+% 3. Detrend the RAW, untouched acceleration data (Removing DC offset)
+accX_hp_20_detrend = accX_hp_20 - mean(accX_hp_20);
+accY_hp_20_detrend = accY_hp_20 - mean(accY_hp_20);
+accX_hnp_20_detrend = accX_hnp_20 - mean(accX_hnp_20);
+accY_hnp_20_detrend = accY_hnp_20 - mean(accY_hnp_20);
+
+% 4. Determine the length of the signals
+L_hp_20 = length(accX_hp_20_detrend);
+L_hnp_20 = length(accX_hnp_20_detrend);
+
+% 5. FFT for X Axis (20Hz)
+Y_x_hp_20 = fft(accX_hp_20_detrend);
+P2_x_hp_20 = abs(Y_x_hp_20 / L_hp_20); 
+P1_x_hp_20 = P2_x_hp_20(1:floor(L_hp_20/2)+1);
+P1_x_hp_20(2:end-1) = 2 * P1_x_hp_20(2:end-1);
+
+Y_x_hnp_20 = fft(accX_hnp_20_detrend);
+P2_x_hnp_20 = abs(Y_x_hnp_20 / L_hnp_20);
+P1_x_hnp_20 = P2_x_hnp_20(1:floor(L_hnp_20/2)+1);
+P1_x_hnp_20(2:end-1) = 2 * P1_x_hnp_20(2:end-1);
+
+% 6. Create proper frequency vectors based on the ideal sampling rate
+f_hp_20 = Fs_ideal_hp_20 * (0:(floor(L_hp_20/2))) / L_hp_20;
+f_hnp_20 = Fs_ideal_hnp_20 * (0:(floor(L_hnp_20/2))) / L_hnp_20;
+
+% 7. Plotting FFT 20Hz - X Axis
+figure('Name','FFT 20Hz - X Axis (Linspace Corrected)'); 
+subplot(2,1,1);
+plot(f_hp_20, P1_x_hp_20, '-r'); grid on; xlim([0 400]);
+legend('Hover Payload Attached');
+subplot(2,1,2);
+plot(f_hnp_20, P1_x_hnp_20, '-r'); grid on; xlim([0 400]);
+legend('Hover Payload Detached');
+sgtitle('Amplitude Spectrum - X Axis Vibrations (Linspace Corrected, LPF 20Hz)');
+xlabel('Frequency [Hz]'); ylabel('Normalised amplitude');
+
+% SECTION 2: Corrected Time Vector and FFT for 160Hz
+
+
+% 1. Create a perfectly uniform time vector using linspace (No data loss)
+t_uni_hp_160 = linspace(time_hp_160(1), time_hp_160(end), length(accX_hp_160));
+t_uni_hnp_160 = linspace(time_hnp_160(1), time_hnp_160(end), length(accX_hnp_160));
+
+% 2. Calculate the exact average sampling frequency based on the new uniform vector
+Fs_ideal_hp_160 = 1 / (t_uni_hp_160(2) - t_uni_hp_160(1));
+Fs_ideal_hnp_160 = 1 / (t_uni_hnp_160(2) - t_uni_hnp_160(1));
+
+% 3. Detrend the RAW, untouched acceleration data
+accX_hp_160_detrend = accX_hp_160 - mean(accX_hp_160);
+accY_hp_160_detrend = accY_hp_160 - mean(accY_hp_160);
+accX_hnp_160_detrend = accX_hnp_160 - mean(accX_hnp_160);
+accY_hnp_160_detrend = accY_hnp_160 - mean(accY_hnp_160);
+
+% 4. Determine the length of the signals
+L_hp_160 = length(accX_hp_160_detrend);
+L_hnp_160 = length(accX_hnp_160_detrend);
+
+% 5. FFT for X Axis (160Hz)
+Y_x_hp_160 = fft(accX_hp_160_detrend);
+P2_x_hp_160 = abs(Y_x_hp_160 / L_hp_160); 
+P1_x_hp_160 = P2_x_hp_160(1:floor(L_hp_160/2)+1);
+P1_x_hp_160(2:end-1) = 2 * P1_x_hp_160(2:end-1);
+
+Y_x_hnp_160 = fft(accX_hnp_160_detrend);
+P2_x_hnp_160 = abs(Y_x_hnp_160 / L_hnp_160);
+P1_x_hnp_160 = P2_x_hnp_160(1:floor(L_hnp_160/2)+1);
+P1_x_hnp_160(2:end-1) = 2 * P1_x_hnp_160(2:end-1);
+
+% 6. Create proper frequency vectors based on the ideal sampling rate
+f_hp_160 = Fs_ideal_hp_160 * (0:(floor(L_hp_160/2))) / L_hp_160;
+f_hnp_160 = Fs_ideal_hnp_160 * (0:(floor(L_hnp_160/2))) / L_hnp_160;
+
+% 7. Plotting FFT 160Hz - X Axis
+figure('Name','FFT 160Hz - X Axis (Linspace Corrected)'); 
+subplot(2,1,1);
+plot(f_hp_160, P1_x_hp_160, '-r'); grid on; xlim([0 400]);
+legend('Hover Payload Attached');
+subplot(2,1,2);
+plot(f_hnp_160, P1_x_hnp_160, '-r'); grid on; xlim([0 400]);
+legend('Hover Payload Detached');
+sgtitle('Amplitude Spectrum - X Axis Vibrations (Linspace Corrected, LPF 160Hz)');
 xlabel('Frequency [Hz]'); ylabel('Normalised amplitude');
