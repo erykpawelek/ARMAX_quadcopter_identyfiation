@@ -36,9 +36,9 @@ def execute_thrust_step(duration, thrust_val, mav_connection, update_freq=50.0):
 
 parser = argparse.ArgumentParser(description="Drone System Identification Validation")
 parser.add_argument("--ver_dur", type=float, default=4.0, help="Duration of validation process in seconds")
-parser.add_argument("--stab_dur", type=float, default=5.0, help="Duration of stabilization phases in seconds")
+parser.add_argument("--stab_dur", type=float, default=10.0, help="Duration of stabilization phases in seconds")
 parser.add_argument("--alt", type=float, default=2.0, help="Altitude at which test will be executed")
-parser.add_argument("--thro", type=float, default=0.55, help="Value of normalized throttle (0.5 is hover point) which is stimuli to the system")
+parser.add_argument("--thro", type=float, default=0.6, help="Value of normalized throttle (0.5 is hover point) which is stimuli to the system")
 
 args = parser.parse_args()
 
@@ -81,26 +81,20 @@ connection.mav.command_long_send(
     args.alt
 )
 print(f"Takeoff command sent. Ascending to {args.alt} meters.")
-
 # Wait safely for the drone to reach the target altitude
 safe_delay(args.stab_dur, connection)
 
 # PHASE 1: Step stimuli with payload
 print("Phase: Step stimuli with payload")
-
 # Send log marker to ArduPilot .bin log
 connection.mav.statustext_send(mavutil.mavlink.MAV_SEVERITY_INFO, b"MARKER: START_STEP_PAYLOAD")
-
 # Execute continuous thrust step
 execute_thrust_step(args.ver_dur, args.thro, connection)
-
 # Send stop marker
 connection.mav.statustext_send(mavutil.mavlink.MAV_SEVERITY_INFO, b"MARKER: STOP_STEP_PAYLOAD")
 
 # PHASE 2: Stabilization at target altitude
 print(f"Phase: Stabilization at {args.alt} meters")
-connection.mav.statustext_send(mavutil.mavlink.MAV_SEVERITY_INFO, b"MARKER: STABILIZATION_1")
-
 # Command drone back to the specific altitude and position
 connection.mav.set_position_target_local_ned_send(
     0,                                  # time_boot_ms
@@ -113,7 +107,6 @@ connection.mav.set_position_target_local_ned_send(
     0, 0, 0,                            # afx, afy, afz
     0, 0                                # yaw, yaw_rate
 )
-
 # Wait safely for stabilization
 safe_delay(args.stab_dur, connection)
 
@@ -128,29 +121,21 @@ try:
     print("Payload detached successfully.")
 except Exception as e:
     print("Error during payload detachment:", e)
-
 print("Phase: Stabilization after payload drop")
 # Wait safely for the drone to recover from the drop disturbance
 safe_delay(args.stab_dur, connection)
 
 # PHASE 4: Step stimuli without payload
 print("Phase: Step stimuli without payload")
-
 # Send log marker to ArduPilot .bin log
 connection.mav.statustext_send(mavutil.mavlink.MAV_SEVERITY_INFO, b"MARKER: START_STEP_NO_PAYLOAD")
-
 # Execute continuous thrust step
 execute_thrust_step(args.ver_dur, args.thro, connection)
-
 # Send stop marker
 connection.mav.statustext_send(mavutil.mavlink.MAV_SEVERITY_INFO, b"MARKER: STOP_STEP_NO_PAYLOAD")
 
-# ==========================================
 # PHASE 5: Final Stabilization
-# ==========================================
 print(f"Phase: Stabilization at {args.alt} meters")
-connection.mav.statustext_send(mavutil.mavlink.MAV_SEVERITY_INFO, b"MARKER: STABILIZATION_2")
-
 # Command drone back to altitude
 connection.mav.set_position_target_local_ned_send(
     0,                                  # time_boot_ms
@@ -163,7 +148,6 @@ connection.mav.set_position_target_local_ned_send(
     0, 0, 0,                            
     0, 0                                
 )
-
 # Final delay to let the drone stabilize before ending script
 safe_delay(2.0, connection)
 print("Validation data collecting finished!")

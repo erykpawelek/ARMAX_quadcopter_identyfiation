@@ -1,13 +1,13 @@
 clc 
 clear all 
 
-load('z_axis_ident.mat')
+load('z_axis_ident_2.mat')
 markers.time(4) = markers.time(4) + 0.94;
 
 vib_hover_filt_20 = load('vib_hover_filt_20.mat');
 vib_hover_filt_20.markers.time(3) = vib_hover_filt_20.markers.time(3) + 0.94;
 
-%% Extracting Hover Operating Points
+%% Extracting Hover Operating Points 
 % Extracting marker strings for 20Hz data
 marker_str_20 = string(vib_hover_filt_20.markers.text);
 
@@ -46,24 +46,24 @@ disp(['Imported PWM Operating Point (Detached): ', num2str(u_mean_no_payload_hov
 %% Accelerations plots and PWM plots
 figure('Name','Acceleration values along X,Y,Z axis');
 subplot(2,1,1);
-plot(imu.time, imu.accX, '-r', imu.time, imu.accY, '--b'); xlim([50 120])
+plot(imu.time, imu.accX, '-r', imu.time, imu.accY, '--b'); xlim([50 140])
 xlabel('Time [s]');ylabel('Acceleration [m/s^2]')
 grid on;
 for i = 1:length(markers.time)
     m_time = markers.time(i);
     m_text = string(markers.text(i,:)); 
-    xline(m_time, '--m');   
+    xline(m_time, '--m', num2str(i),'LabelVerticalAlignment','bottom');   
 end
 legend('Acceleration X', 'Acceleration Y');
 
 subplot(2,1,2);
-plot(imu.time, imu.accZ, '-g'); xlim([50 120])
+plot(imu.time, imu.accZ, '-g'); xlim([50 140])
 xlabel('Time [s]');ylabel('Acceleration [m/s^2]')
 grid on;
 for i = 1:length(markers.time)
     m_time = markers.time(i);
     m_text = string(markers.text(i,:)); 
-    xline(m_time, '--m');   
+    xline(m_time, '--m', num2str(i), 'LabelVerticalAlignment','bottom');   
 end
 legend('Acceleration Z');
 sgtitle('Acceleration plots during whole identification sequence');
@@ -71,19 +71,20 @@ sgtitle('Acceleration plots during whole identification sequence');
 figure('Name', 'Motor PWM Signals during whole identification sequence');
 u_mean_raw_plot = (double(rcou.c1) + double(rcou.c2) + double(rcou.c3) + double(rcou.c4)) / 4;
 plot(rcou.time, u_mean_raw_plot, 'g', 'LineWidth', 1.2); 
-xlim([50 120]); 
+xlim([50 140]); 
 xlabel('Time [s]'); 
 ylabel('Average PWM [\mus]');
-title('Average Motor PWM Signal with Event Markers');
+title('Average Motor PWM Signal with Event Markers MISO -> SISO');
 grid on;
 hold on;
 for i = 1:length(markers.time)
     m_time = markers.time(i);
-    xline(m_time, '--m', 'LineWidth', 1.5);   
+    xline(m_time, '--m', num2str(i), 'LabelVerticalAlignment','bottom'); 
 end
 legend('Average Motor PWM');
 
-%% System identification - Data Preparation & ARMAX Formatting
+%%
+%%%%%%%%%% System identification - Data Preparation & ARMAX Formatting
 
 % Extracting marker times
 marker_str = string(markers.text);
@@ -109,9 +110,8 @@ roll_rad_all = deg2rad(interp1(att.time, att.roll, rcou.time, 'linear'));
 pitch_rad_all = deg2rad(interp1(att.time, att.pitch, rcou.time, 'linear'));
 u_eff_all = u_mean_raw .* cos(roll_rad_all) .* cos(pitch_rad_all);
 
-% =========================================================
-% SETTING TRUE OPERATING POINTS
-% =========================================================
+%%%%%%%%%%%% MERGING CALCULATED ABOVE OPERATING POINTS WITH NOISED DATA
+
 % Assigning PWM baselines calculated from the hover log
 u_eff_op_n1 = u_mean_payload_hover; 
 u_eff_op_n2 = u_mean_no_payload_hover; 
@@ -128,9 +128,7 @@ alt_op_n1 = mean(ctun.alt(mask_hover1_ctun));
 mask_hover2_ctun = (ctun.time >= t_hover2_start) & (ctun.time <= t_hover2_end);
 alt_op_n2 = mean(ctun.alt(mask_hover2_ctun));
 
-% =========================================================
 % PROCESSING NOISE 1 (Payload Attached) 
-% =========================================================
 % Extract and interpolate output: Altitude
 y_alt_n1 = interp1(ctun.time, ctun.alt, t_grid_noise1, 'linear')';
 % Detrend using stable altitude baseline
@@ -144,9 +142,7 @@ u_eff_n1_detrend = u_eff_n1 - u_eff_op_n1;
 data_noise1 = iddata(y_alt_n1_detrend, u_eff_n1_detrend, Ts, ...
     'InputName', 'Effective PWM Deviation', 'OutputName', 'Altitude Deviation');
 
-% =========================================================
 % PROCESSING NOISE 2 (Payload Detached)
-% =========================================================
 % Extract and interpolate output: Altitude
 y_alt_n2 = interp1(ctun.time, ctun.alt, t_grid_noise2, 'linear')';
 y_alt_n2_detrend = y_alt_n2 - alt_op_n2;
@@ -162,14 +158,14 @@ data_noise2 = iddata(y_alt_n2_detrend, u_eff_n2_detrend, Ts, ...
 % PLOTTING PREPARED DATA
 figure('Name', 'Prepared Data Overview (True Baselines)');
 subplot(2,1,1);
-plot(data_noise1);
+plot(data_noise1); grid on;
 title('Prepared ARMAX Data - Noise 1 (Payload Attached)');
 subplot(2,1,2);
-plot(data_noise2);
+plot(data_noise2); grid on;
 title('Prepared ARMAX Data - Noise 2 (Payload Detached)');
 
 % VISUALIZATION: RAW VS INTERPOLATED DATA 
-figure('Name', 'Interpolation Verification');
+figure('Name', 'Interpolation Verification - Altitude Output');
 plot(t_grid_noise1, y_alt_n1, 'r-', 'LineWidth', 1.5, 'DisplayName', 'Interpolated Grid (Strict 50Hz)');hold on;
 grid on;
 plot(ctun.time, ctun.alt, 'g.', 'MarkerSize', 8, 'DisplayName', 'Raw Log Data (Variable Step)');
@@ -187,7 +183,6 @@ grid on;
 plot(rcou.time, u_eff_all, 'g.', 'MarkerSize', 8, 'DisplayName', 'Raw PWM Log Data');
 
 % CRITICAL: We zoom in on a small 2-second window. 
-% If you look at the whole 20s, it's just a thick block of color.
 xlim([t_noise1_start + 5, t_noise1_start + 7]); 
 title('Interpolation Verification - Effective PWM (Zoomed 2s window)');
 xlabel('Time [s]');
@@ -322,7 +317,24 @@ legend('Noise 1 (Payload Attached)', 'Noise 2 (Payload Detached)', 'Location', '
 %% CROSS-VALIDATION WITH REAL FLIGHT DATA
 disp('Starting validation sequence using external flight log...');
 % Load the validation data
-validation_data = load('z_validation.mat');
+validation_data = load('z_validation_2.mat');
+validation_data.markers.time(3) = validation_data.markers.time(3) + 0.94;
+
+figure('Name','Attitude During Veryfication');
+yyaxis('left');
+plot(validation_data.ctun.time, validation_data.ctun.alt, '-r', 'LineWidth', 2); xlim([50 100])
+xlabel('Time [s]');ylabel('Altitude [m]')
+grid on; hold on;
+yyaxis("right");
+plot(validation_data.ctun.time, validation_data.ctun.thro, '-g', 'LineWidth', 2); xlim([50 100])
+ylabel('Normalized closed loop throttle')
+grid on; hold on;
+for i = 1:length(validation_data.markers.time)
+    m_time = validation_data.markers.time(i);
+    m_text = string(validation_data.markers.text(i,:)); 
+    xline(m_time, '--m', num2str(i), 'LabelVerticalAlignment', 'bottom');   
+end
+legend('Altitude [m]', 'Normalized closed loop throttle');
 
 % Extract marker timings from the validation log
 val_marker_str = string(validation_data.markers.text);
@@ -347,32 +359,31 @@ u_mean_raw_val = (double(validation_data.rcou.c1) + double(validation_data.rcou.
 % Interpolate attitudes to match RCOU timestamps and convert to radians
 roll_rad_val  = deg2rad(interp1(validation_data.att.time, validation_data.att.roll, validation_data.rcou.time, 'linear'));
 pitch_rad_val = deg2rad(interp1(validation_data.att.time, validation_data.att.pitch, validation_data.rcou.time, 'linear'));
+
 % Calculate the pure vertical thrust component
 u_eff_all_val = u_mean_raw_val .* cos(roll_rad_val) .* cos(pitch_rad_val);
 
-% =========================================================
 % VALIDATION PHASE 1: Payload Attached
-% =========================================================
-% 1. Prepare and detrend the input (Effective PWM)
+% Prepare and detrend the input (Effective PWM)
 u_eff_val_p = interp1(validation_data.rcou.time, u_eff_all_val, t_grid_val_p, 'linear')';
 % CRITICAL: Using the exact same operating point found during identification
 u_eff_val_p_detrend = u_eff_val_p - u_mean_payload_hover;
 
-% 2. Prepare and detrend the output (Altitude)
+% Prepare and detrend the output (Altitude)
 y_alt_val_p = interp1(validation_data.ctun.time, validation_data.ctun.alt, t_grid_val_p, 'linear')';
 % Find baseline altitude right before the step (2-second window)
 mask_hover_val_p = (validation_data.ctun.time >= (t_val_p_start - 2.0)) & (validation_data.ctun.time <= t_val_p_start);
 alt_op_val_p = mean(validation_data.ctun.alt(mask_hover_val_p));
 y_alt_val_p_detrend = y_alt_val_p - alt_op_val_p;
 
-% 3. Simulate ARMAX model response to the actual recorded PWM step
+% Simulate ARMAX model response to the actual recorded PWM step
 % lsim requires a time vector starting from 0
 t_lsim_p = t_grid_val_p - t_grid_val_p(1);
 [y_sim_p, ~] = lsim(best_sys_n1, u_eff_val_p_detrend, t_lsim_p);
 
-% =========================================================
+% 
 % VALIDATION PHASE 2: Payload Detached
-% =========================================================
+% 
 % 1. Prepare and detrend the input (Effective PWM)
 u_eff_val_np = interp1(validation_data.rcou.time, u_eff_all_val, t_grid_val_np, 'linear')';
 % CRITICAL: Using the exact same operating point found during identification
@@ -389,29 +400,52 @@ y_alt_val_np_detrend = y_alt_val_np - alt_op_val_np;
 t_lsim_np = t_grid_val_np - t_grid_val_np(1);
 [y_sim_np, ~] = lsim(best_sys_n2, u_eff_val_np_detrend, t_lsim_np);
 
-% =========================================================
+
 % PLOTTING RESULTS
-% =========================================================
 figure('Name', 'ARMAX Cross-Validation with Real Flight Logs');
 
 % Plot 1: Payload Attached Comparison
 subplot(2,1,1);
+yyaxis("left");
 plot(t_lsim_p, y_alt_val_p_detrend, 'g-', 'LineWidth', 2, 'DisplayName', 'Real Flight Log Data'); hold on;
 plot(t_lsim_p, y_sim_p, 'r--', 'LineWidth', 2, 'DisplayName', ['Simulated ARMAX ', num2str(best_orders_n1)]);
-grid on;
-title('Model Validation: Response to real PWM step (Payload Attached)');
 xlabel('Time [s]');
 ylabel('Altitude Change [m]');
-legend('Location', 'northwest');
+grid on;
+yyaxis("right");
+plot(t_lsim_p, u_eff_val_p_detrend,'--m')
+title('Model Validation: Response to real PWM step (Payload Attached)');
+ylabel('PWM width [us]');
+legend('Real system',['Simulated ARMAX ', num2str(best_orders_n1)],'PWM stymuli','Location', 'best');
 
 % Plot 2: Payload Detached Comparison
 subplot(2,1,2);
-plot(t_lsim_np, y_alt_val_np_detrend, 'g-', 'LineWidth', 2, 'DisplayName', 'Real Flight Log Data'); hold on;
-plot(t_lsim_np, y_sim_np, 'b--', 'LineWidth', 2, 'DisplayName', ['Simulated ARMAX ', num2str(best_orders_n2)]);
-grid on;
-title('Model Validation: Response to real PWM step (Payload Detached)');
+yyaxis("left");
+plot(t_lsim_np, y_alt_val_np_detrend, 'g-', 'LineWidth', 2); hold on;
+plot(t_lsim_np, y_sim_np, 'r--', 'LineWidth', 2);
 xlabel('Time [s]');
 ylabel('Altitude Change [m]');
-legend('Location', 'northwest');
+grid on;
+title('Model Validation: Response to real PWM step (Payload Detached)');
+yyaxis("right");
+plot(t_lsim_np, u_eff_val_np_detrend,'--m');
+ylabel('PWM width [us]');
+legend('Real system',['Simulated ARMAX ', num2str(best_orders_n2)],'PWM stymuli','Location', 'best');
+
+figure('Name', 'ARMAX Cross-Validation with Real Flight Logs - ERRORS');
+
+subplot(2,1,1);
+plot(t_lsim_p, y_alt_val_p_detrend - y_sim_p, 'r-', 'LineWidth', 2); hold on;
+grid on;
+xlabel('Time [s]');
+ylabel('Error [m]');
+title('Model Validation: ERROR between Y(ARMAX) and Y(real) (Payload Attached)');
+
+subplot(2,1,2);
+plot(t_lsim_np, y_alt_val_np_detrend - y_sim_np, 'r-', 'LineWidth', 2); hold on;
+grid on;
+xlabel('Time [s]');
+ylabel('Error [m]');
+title('Model Validation: ERROR between Y(ARMAX) and Y(real) (Payload Dettached)');
 
 disp('Validation complete. Compare the solid black line (reality) with dashed lines (simulation).');
